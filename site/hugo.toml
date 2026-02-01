@@ -1,7 +1,6 @@
 baseURL = 'https://s-celles.github.io/package-url-viewer/'
 languageCode = 'en-us'
 title = 'PURL Viewer - Package URL Parser'
-theme = ''
 
 [build]
   writeStats = true
