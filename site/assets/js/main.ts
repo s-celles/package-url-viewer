@@ -1,8 +1,10 @@
 import { parsePurl } from './purl-parser';
 import { getRegistryUrl } from './registry-mapper';
 import { getVulnerableCodeUrl } from './vulnerablecode';
+import { getBadges } from './badges';
 import type { PackageURL, ParseResult, RegistryResult } from './types/registry-types';
 import type { VulnerableCodeResult } from './vulnerablecode';
+import type { BadgeResult } from './badges';
 
 // DOM Elements
 const purlInput = document.getElementById('purl-input') as HTMLInputElement;
@@ -14,6 +16,7 @@ const shareInput = document.getElementById('share-input') as HTMLInputElement;
 const copyButton = document.getElementById('copy-button') as HTMLButtonElement;
 const errorResult = document.getElementById('error-result') as HTMLElement;
 const vulnerablecodeResult = document.getElementById('vulnerablecode-result') as HTMLElement;
+const badgeContainer = document.getElementById('badge-container') as HTMLElement;
 
 /**
  * Display error message
@@ -143,6 +146,69 @@ function updateShareUrl(purlString: string): void {
 }
 
 /**
+ * Copy badge markdown to clipboard
+ */
+async function copyBadgeMarkdown(markdown: string, button: HTMLButtonElement): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(markdown);
+    button.textContent = 'Copied!';
+    button.classList.add('copied');
+    setTimeout(() => {
+      button.textContent = 'Copy';
+      button.classList.remove('copied');
+    }, 2000);
+  } catch {
+    // Fallback for older browsers
+    const tempInput = document.createElement('input');
+    tempInput.value = markdown;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+    button.textContent = 'Copied!';
+    button.classList.add('copied');
+    setTimeout(() => {
+      button.textContent = 'Copy';
+      button.classList.remove('copied');
+    }, 2000);
+  }
+}
+
+/**
+ * Display badges section
+ */
+function showBadges(badges: BadgeResult[]): void {
+  const html = badges.map((badge, index) => `
+    <div class="badge-item">
+      <div class="badge-item-header">
+        <span class="badge-label">${escapeHtml(badge.label)}</span>
+        <div class="badge-preview">
+          <a href="${escapeHtml(badge.linkUrl)}" target="_blank" rel="noopener" title="Preview badge link">
+            <img src="${escapeHtml(badge.imageUrl)}" alt="PURL Viewer badge">
+          </a>
+        </div>
+      </div>
+      <div class="badge-markdown">
+        <input type="text" class="badge-markdown-input" value="${escapeHtml(badge.markdown)}" readonly aria-label="Badge markdown for ${escapeHtml(badge.label)}">
+        <button class="badge-copy-button" data-badge-index="${index}">Copy</button>
+      </div>
+    </div>
+  `).join('');
+
+  badgeContainer.innerHTML = html;
+
+  // Add event listeners to copy buttons
+  const copyButtons = badgeContainer.querySelectorAll('.badge-copy-button');
+  copyButtons.forEach((btn) => {
+    const button = btn as HTMLButtonElement;
+    const index = parseInt(button.dataset.badgeIndex || '0', 10);
+    button.addEventListener('click', () => {
+      copyBadgeMarkdown(badges[index].markdown, button);
+    });
+  });
+}
+
+/**
  * Process and display PURL
  */
 function processPurl(input: string): void {
@@ -157,9 +223,11 @@ function processPurl(input: string): void {
 
   const registry: RegistryResult = getRegistryUrl(result.purl);
   const vulnerablecode: VulnerableCodeResult = getVulnerableCodeUrl(input);
+  const badges: BadgeResult[] = getBadges(input);
 
   showRegistryResult(registry);
   showVulnerableCodeResult(vulnerablecode);
+  showBadges(badges);
   showComponents(result.purl);
   updateShareUrl(input);
 
