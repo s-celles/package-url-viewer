@@ -2,7 +2,7 @@ import { parsePurl } from './purl-parser';
 import { getRegistryUrl } from './registry-mapper';
 import { getVulnerableCodeUrl } from './vulnerablecode';
 import { getBadges } from './badges';
-import { fetchPackageByPurl, fetchPackageVersions, fetchDependencies } from './purldb';
+import { fetchPackageByPurl, fetchPackageVersions } from './purldb';
 import { renderPurlDBSection, renderAllVersions, renderVersionList } from './purldb-display';
 import type { PackageURL, ParseResult, RegistryResult } from './types/registry-types';
 import type { VulnerableCodeResult } from './vulnerablecode';
@@ -294,11 +294,8 @@ async function fetchAndDisplayPurlDBData(): Promise<void> {
       currentParsedPurl.name
     );
 
-    // Fetch dependencies if available
-    let dependencies: PurlDBDependency[] = [];
-    if (pkg && pkg.dependencies) {
-      dependencies = await fetchDependencies(pkg.dependencies);
-    }
+    // Get embedded dependencies from package data
+    const dependencies: PurlDBDependency[] = pkg?.dependencies || [];
 
     // Wait for versions
     const versions = await versionsPromise;

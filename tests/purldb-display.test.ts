@@ -27,7 +27,7 @@ function createMockPackage(overrides: Partial<PurlDBPackage> = {}): PurlDBPackag
     repository_homepage_url: 'https://github.com/lodash/lodash',
     release_date: '2021-02-20',
     keywords: ['modules', 'stdlib', 'util'],
-    dependencies: 'https://public.purldb.io/api/packages/1/dependencies/',
+    dependencies: [],
     parties: [],
     ...overrides,
   };

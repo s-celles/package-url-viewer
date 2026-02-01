@@ -6,7 +6,6 @@
 import type {
   PurlDBPackage,
   PurlDBResponse,
-  PurlDBDependency,
   PurlDBCacheEntry,
 } from './types/purldb-types';
 
@@ -20,7 +19,6 @@ const MAX_PAGES = 10;
 // In-memory cache for session duration
 const packageCache = new Map<string, PurlDBCacheEntry>();
 const versionsCache = new Map<string, PurlDBPackage[]>();
-const dependenciesCache = new Map<string, PurlDBDependency[]>();
 
 /**
  * Get cached package data
@@ -172,45 +170,6 @@ export async function fetchPackageVersions(
 }
 
 /**
- * Fetch dependencies for a package
- * @param dependenciesUrl - Full URL to dependencies endpoint
- * @returns Array of dependencies
- */
-export async function fetchDependencies(
-  dependenciesUrl: string
-): Promise<PurlDBDependency[]> {
-  // Check cache first
-  const cached = dependenciesCache.get(dependenciesUrl);
-  if (cached) {
-    return cached;
-  }
-
-  try {
-    const response = await fetchWithTimeout(dependenciesUrl);
-
-    if (!response.ok) {
-      console.error(`PurlDB dependencies API error: ${response.status}`);
-      return [];
-    }
-
-    const data = await response.json();
-    // Handle both direct array and paginated response
-    const results: PurlDBDependency[] = Array.isArray(data)
-      ? data
-      : data.results || [];
-
-    // Cache the results
-    dependenciesCache.set(dependenciesUrl, results);
-    return results;
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error('PurlDB dependencies fetch error:', error.message);
-    }
-    return [];
-  }
-}
-
-/**
  * Generate direct link to PurlDB for a PURL
  * @param purl - PURL string
  * @returns Full URL to PurlDB API endpoint
@@ -225,5 +184,4 @@ export function getPurlDBUrl(purl: string): string {
 export function clearCache(): void {
   packageCache.clear();
   versionsCache.clear();
-  dependenciesCache.clear();
 }

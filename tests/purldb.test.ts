@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   fetchPackageByPurl,
   fetchPackageVersions,
-  fetchDependencies,
   getPurlDBUrl,
   clearCache,
   PURLDB_API_URL,
@@ -233,62 +232,6 @@ describe('PurlDB API Service', () => {
       const result = await fetchPackageVersions('npm', null, 'lodash');
 
       expect(result).toEqual([]);
-    });
-  });
-
-  describe('fetchDependencies', () => {
-    it('should return array of dependencies', async () => {
-      const mockDeps = [
-        { purl: 'pkg:npm/dep1@1.0.0', scope: 'runtime', is_runtime: true, is_optional: false },
-        { purl: 'pkg:npm/dep2@2.0.0', scope: 'dev', is_runtime: false, is_optional: false },
-      ];
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockDeps,
-      });
-
-      const result = await fetchDependencies('https://api.example.com/deps');
-
-      expect(result).toEqual(mockDeps);
-    });
-
-    it('should handle paginated response', async () => {
-      const mockDeps = [
-        { purl: 'pkg:npm/dep1@1.0.0', scope: 'runtime' },
-      ];
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          results: mockDeps,
-        }),
-      });
-
-      const result = await fetchDependencies('https://api.example.com/deps');
-
-      expect(result).toEqual(mockDeps);
-    });
-
-    it('should return empty array on error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
-
-      const result = await fetchDependencies('https://api.example.com/deps');
-
-      expect(result).toEqual([]);
-    });
-
-    it('should use cache for repeated queries', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => [{ purl: 'pkg:npm/dep@1.0.0' }],
-      });
-
-      const url = 'https://api.example.com/deps/unique';
-      await fetchDependencies(url);
-      await fetchDependencies(url);
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
   });
 

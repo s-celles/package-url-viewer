@@ -30,7 +30,7 @@ export interface PurlDBPackage {
   repository_homepage_url: string | null;
   release_date: string | null;
   keywords: string[];
-  dependencies: string;
+  dependencies: PurlDBDependency[];
   parties: PurlDBParty[];
 }
 
