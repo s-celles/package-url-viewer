@@ -186,29 +186,21 @@ describe('PurlDB API Service', () => {
       );
     });
 
-    it('should handle pagination', async () => {
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({
-            count: 2,
-            next: 'https://public.purldb.io/api/packages/?page=2',
-            results: [{ purl: 'pkg:npm/lodash@4.17.21' }],
-          }),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({
-            count: 2,
-            next: null,
-            results: [{ purl: 'pkg:npm/lodash@4.17.20' }],
-          }),
-        });
+    it('should fetch only first page (no pagination for reliability)', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          count: 100,
+          next: 'https://public.purldb.io/api/packages/?page=2',
+          results: [{ purl: 'pkg:npm/lodash@4.17.21' }],
+        }),
+      });
 
       const result = await fetchPackageVersions('npm', null, 'lodash');
 
-      expect(result.length).toBe(2);
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      // Should only return first page results, not follow pagination
+      expect(result.length).toBe(1);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
     it('should use cache for repeated queries', async () => {

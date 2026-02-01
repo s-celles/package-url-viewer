@@ -12,9 +12,8 @@ import type {
 // API Constants
 export const PURLDB_BASE_URL = 'https://public.purldb.io';
 export const PURLDB_API_URL = `${PURLDB_BASE_URL}/api/packages/`;
-export const PURLDB_TIMEOUT_MS = 10000; // Increased for proxy latency
+export const PURLDB_TIMEOUT_MS = 15000; // Increased for proxy latency
 export const PURLDB_MAX_VERSIONS_DISPLAY = 10;
-const MAX_PAGES = 5; // Reduced to limit proxy requests
 
 // CORS proxy to bypass same-origin policy (PurlDB doesn't support CORS)
 const CORS_PROXY_URL = 'https://api.codetabs.com/v1/proxy/?quest=';
@@ -149,28 +148,21 @@ export async function fetchPackageVersions(
       params.set('namespace', namespace);
     }
 
-    let allResults: PurlDBPackage[] = [];
-    let nextUrl: string | null = `${PURLDB_API_URL}?${params.toString()}`;
-    let pageCount = 0;
+    // Fetch first page only (pagination through proxy is slow/unreliable)
+    const url = `${PURLDB_API_URL}?${params.toString()}`;
+    const response = await fetchWithTimeout(withCorsProxy(url));
 
-    // Handle pagination
-    while (nextUrl && pageCount < MAX_PAGES) {
-      const response = await fetchWithTimeout(withCorsProxy(nextUrl));
-
-      if (!response.ok) {
-        console.error(`PurlDB versions API error: ${response.status}`);
-        break;
-      }
-
-      const data: PurlDBResponse = await response.json();
-      allResults = allResults.concat(data.results);
-      nextUrl = data.next;
-      pageCount++;
+    if (!response.ok) {
+      console.error(`PurlDB versions API error: ${response.status}`);
+      return [];
     }
 
+    const data: PurlDBResponse = await response.json();
+    const results = data.results || [];
+
     // Cache the results
-    versionsCache.set(cacheKey, allResults);
-    return allResults;
+    versionsCache.set(cacheKey, results);
+    return results;
   } catch (error) {
     if (error instanceof Error) {
       console.error('PurlDB versions fetch error:', error.message);
