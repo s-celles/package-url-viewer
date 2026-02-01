@@ -36,6 +36,40 @@ function formatDate(dateStr: string | null): string {
 }
 
 /**
+ * Convert SPDX license ID to clickable link
+ * @param licenseId - SPDX license identifier
+ * @returns HTML link to SPDX license page
+ */
+function spdxLicenseLink(licenseId: string): string {
+  const trimmed = licenseId.trim();
+  // Skip operators and empty strings
+  if (!trimmed || trimmed === 'AND' || trimmed === 'OR' || trimmed === 'WITH') {
+    return escapeHtml(trimmed);
+  }
+  const url = `https://spdx.org/licenses/${encodeURIComponent(trimmed)}.html`;
+  return `<a href="${escapeHtml(url)}" class="license-link" target="_blank" rel="noopener">${escapeHtml(trimmed)}</a>`;
+}
+
+/**
+ * Render SPDX license expression with clickable links
+ * @param expression - SPDX license expression (e.g., "MIT AND Apache-2.0")
+ * @returns HTML string with clickable license links
+ */
+function renderSpdxExpression(expression: string): string {
+  // Split by operators while keeping them
+  const parts = expression.split(/\s+(AND|OR|WITH)\s+/);
+  return parts
+    .map((part, index) => {
+      // Even indices are license IDs, odd indices are operators
+      if (index % 2 === 0) {
+        return spdxLicenseLink(part);
+      }
+      return ` <span class="license-operator">${escapeHtml(part)}</span> `;
+    })
+    .join('');
+}
+
+/**
  * Render license information
  * @param pkg - Package data or null
  * @returns HTML string for license display
@@ -45,14 +79,20 @@ export function renderLicenseInfo(pkg: PurlDBPackage | null): string {
     return '<p class="purldb-empty">License information not available</p>';
   }
 
-  const license =
-    pkg.declared_license_expression_spdx || pkg.declared_license_expression;
+  const spdxLicense = pkg.declared_license_expression_spdx;
+  const declaredLicense = pkg.declared_license_expression;
 
-  if (!license) {
+  if (!spdxLicense && !declaredLicense) {
     return '<p class="purldb-empty">License information not available</p>';
   }
 
-  return `<span class="license-badge">${escapeHtml(license)}</span>`;
+  // If we have SPDX license, render with clickable links
+  if (spdxLicense) {
+    return `<span class="license-badge">${renderSpdxExpression(spdxLicense)}</span>`;
+  }
+
+  // Fall back to plain text for non-SPDX licenses
+  return `<span class="license-badge">${escapeHtml(declaredLicense || '')}</span>`;
 }
 
 /**

@@ -533,10 +533,26 @@ body {
 
 .purldb-loading {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
   color: var(--color-text-muted);
   padding: 1rem 0;
+}
+
+.purldb-loading-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.purldb-direct-link {
+  color: var(--color-link);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.purldb-direct-link:hover {
+  text-decoration: underline;
 }
 
 .loading-spinner {
@@ -601,6 +617,21 @@ body {
   font-family: var(--font-mono);
   font-size: 0.875rem;
   font-weight: 500;
+}
+
+.license-badge .license-link {
+  color: white;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.license-badge .license-link:hover {
+  text-decoration-thickness: 2px;
+}
+
+.license-badge .license-operator {
+  opacity: 0.8;
+  font-weight: 400;
 }
 
 /* PurlDB Link */

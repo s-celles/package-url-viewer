@@ -2,7 +2,7 @@ import { parsePurl } from './purl-parser';
 import { getRegistryUrl } from './registry-mapper';
 import { getVulnerableCodeUrl } from './vulnerablecode';
 import { getBadges } from './badges';
-import { fetchPackageByPurl, fetchPackageVersions } from './purldb';
+import { fetchPackageByPurl, fetchPackageVersions, getPurlDBUrl } from './purldb';
 import { renderPurlDBSection, renderAllVersions, renderVersionList } from './purldb-display';
 import type { PackageURL, ParseResult, RegistryResult } from './types/registry-types';
 import type { VulnerableCodeResult } from './vulnerablecode';
@@ -24,6 +24,7 @@ const purldbSection = document.getElementById('purldb-section') as HTMLElement;
 const purldbPrompt = document.getElementById('purldb-prompt') as HTMLElement;
 const purldbLoadButton = document.getElementById('purldb-load-button') as HTMLButtonElement;
 const purldbLoading = document.getElementById('purldb-loading') as HTMLElement;
+const purldbDirectLink = document.getElementById('purldb-direct-link') as HTMLAnchorElement;
 const purldbContent = document.getElementById('purldb-content') as HTMLElement;
 const purldbError = document.getElementById('purldb-error') as HTMLElement;
 
@@ -242,6 +243,8 @@ function showPurlDBLoading(): void {
   purldbLoading.style.display = 'flex';
   purldbContent.style.display = 'none';
   purldbError.style.display = 'none';
+  // Set direct link to PurlDB so users can access data while loading
+  purldbDirectLink.href = getPurlDBUrl(currentPurl);
 }
 
 /**
