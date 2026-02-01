@@ -101,6 +101,24 @@ describe('getRegistryUrl', () => {
     });
   });
 
+  describe('julia packages', () => {
+    it('should strip .jl suffix from package name', () => {
+      const result = getRegistryUrl({
+        type: 'julia',
+        name: 'ToonFormat.jl'
+      });
+      expect(result.url).toBe('https://juliahub.com/ui/Packages/General/ToonFormat');
+    });
+
+    it('should handle package names without .jl suffix', () => {
+      const result = getRegistryUrl({
+        type: 'julia',
+        name: 'DataFrames'
+      });
+      expect(result.url).toBe('https://juliahub.com/ui/Packages/General/DataFrames');
+    });
+  });
+
   describe('packages requiring namespace', () => {
     it('should return null URL for github without namespace', () => {
       const result = getRegistryUrl({ type: 'github', name: 'repo' });

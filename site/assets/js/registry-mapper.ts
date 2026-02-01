@@ -171,9 +171,10 @@ function generateUrl(purl: PackageURL): string | null {
       if (!namespace) return null;
       return `https://swiftpackageindex.com/${namespace}/${name}`;
 
-    // julia
+    // julia - strip .jl suffix if present
     case 'julia':
-      return `https://juliahub.com/ui/Packages/General/${name}`;
+      const juliaName = name.endsWith('.jl') ? name.slice(0, -3) : name;
+      return `https://juliahub.com/ui/Packages/General/${juliaName}`;
 
     // luarocks - requires namespace
     case 'luarocks':
