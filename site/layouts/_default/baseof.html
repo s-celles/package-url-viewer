@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode | default "en" }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ .Site.Params.description | default .Site.Title }}">
+  <title>{{ .Title }} | {{ .Site.Title }}</title>
+  <link rel="stylesheet" href="{{ "css/style.css" | relURL }}">
+  {{ block "head" . }}{{ end }}
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="site-title">
+        <a href="{{ .Site.BaseURL }}">{{ .Site.Title }}</a>
+      </h1>
+      <p class="site-description">{{ .Site.Params.description }}</p>
+    </div>
+  </header>
+
+  <main class="site-main">
+    <div class="container">
+      {{ block "main" . }}{{ end }}
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        <a href="https://github.com/package-url/purl-spec" target="_blank" rel="noopener">PURL Specification</a>
+        &middot;
+        <a href="https://github.com/s-celles/package-url-viewer" target="_blank" rel="noopener">Source Code</a>
+      </p>
+    </div>
+  </footer>
+
+  {{ $js := resources.Get "js/main.ts" | js.Build (dict "format" "iife" "minify" hugo.IsProduction "target" "es2020") }}
+  <script src="{{ $js.RelPermalink }}"></script>
+</body>
+</html>

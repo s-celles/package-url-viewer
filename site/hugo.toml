@@ -1,0 +1,16 @@
+baseURL = 'https://s-celles.github.io/package-url-viewer/'
+languageCode = 'en-us'
+title = 'PURL Viewer - Package URL Parser'
+theme = ''
+
+[build]
+  writeStats = true
+
+[params]
+  description = 'Parse Package URLs (PURLs) and link to their official registries'
+  author = 'Sebastien Celles'
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true

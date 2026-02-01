@@ -1,0 +1,25 @@
+{
+  "name": "package-url-viewer",
+  "version": "0.1.0",
+  "description": "A static website to parse Package URLs (PURLs) and link to their registries",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "cd site && hugo --minify",
+    "dev": "cd site && hugo server -D"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/s-celles/package-url-viewer.git"
+  },
+  "author": "Sebastien Celles",
+  "license": "MIT",
+  "dependencies": {
+    "packageurl-js": "^2.0.1"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0",
+    "jsdom": "^26.0.0"
+  }
+}

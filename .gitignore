@@ -1,0 +1,28 @@
+# Ignore all files
+*
+
+# Except these files
+!.gitignore
+!README.md
+!LICENSE
+
+!site/
+!site/**/*
+
+!tests/
+!tests/**/*
+
+!.github/
+!.github/**/*
+
+!package.json
+!vite.config.js
+
+
+# More specific ignores
+*.test
+imports.*
+dist/
+public/
+.DS_Store 
+cache/filecache/_gen/
