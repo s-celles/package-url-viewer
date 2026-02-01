@@ -190,6 +190,52 @@ body {
   color: var(--color-text-muted);
 }
 
+/* VulnerableCode Link */
+:root {
+  --color-security: #d97706;
+  --color-security-dark: #b45309;
+}
+
+.vulnerablecode-result {
+  padding: 1rem 1.5rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 4px solid var(--color-security);
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+}
+
+.vulnerablecode-name {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.vulnerablecode-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-security);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.vulnerablecode-link:hover {
+  color: var(--color-security-dark);
+  text-decoration: underline;
+}
+
+.vulnerablecode-link .shield-icon {
+  flex-shrink: 0;
+}
+
+.vulnerablecode-link .external-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
 /* Components Display */
 .components-section {
   margin-top: 1.5rem;
