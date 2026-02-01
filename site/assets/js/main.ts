@@ -2,9 +2,12 @@ import { parsePurl } from './purl-parser';
 import { getRegistryUrl } from './registry-mapper';
 import { getVulnerableCodeUrl } from './vulnerablecode';
 import { getBadges } from './badges';
+import { fetchPackageByPurl, fetchPackageVersions, fetchDependencies } from './purldb';
+import { renderPurlDBSection, renderAllVersions, renderVersionList } from './purldb-display';
 import type { PackageURL, ParseResult, RegistryResult } from './types/registry-types';
 import type { VulnerableCodeResult } from './vulnerablecode';
 import type { BadgeResult } from './badges';
+import type { PurlDBPackage, PurlDBDependency } from './types/purldb-types';
 
 // DOM Elements
 const purlInput = document.getElementById('purl-input') as HTMLInputElement;
@@ -17,6 +20,14 @@ const copyButton = document.getElementById('copy-button') as HTMLButtonElement;
 const errorResult = document.getElementById('error-result') as HTMLElement;
 const vulnerablecodeResult = document.getElementById('vulnerablecode-result') as HTMLElement;
 const badgeContainer = document.getElementById('badge-container') as HTMLElement;
+const purldbSection = document.getElementById('purldb-section') as HTMLElement;
+const purldbLoading = document.getElementById('purldb-loading') as HTMLElement;
+const purldbContent = document.getElementById('purldb-content') as HTMLElement;
+const purldbError = document.getElementById('purldb-error') as HTMLElement;
+
+// State for version expansion
+let currentVersions: PurlDBPackage[] = [];
+let currentPurl: string = '';
 
 /**
  * Display error message
@@ -209,10 +220,142 @@ function showBadges(badges: BadgeResult[]): void {
 }
 
 /**
+ * Show PurlDB loading state
+ */
+function showPurlDBLoading(): void {
+  purldbSection.style.display = 'block';
+  purldbLoading.style.display = 'flex';
+  purldbContent.style.display = 'none';
+  purldbError.style.display = 'none';
+}
+
+/**
+ * Show PurlDB content
+ */
+function showPurlDBContent(html: string): void {
+  purldbLoading.style.display = 'none';
+  purldbContent.innerHTML = html;
+  purldbContent.style.display = 'block';
+  purldbError.style.display = 'none';
+}
+
+/**
+ * Show PurlDB error
+ */
+function showPurlDBError(message: string): void {
+  purldbLoading.style.display = 'none';
+  purldbContent.style.display = 'none';
+  purldbError.textContent = message;
+  purldbError.style.display = 'block';
+}
+
+/**
+ * Hide PurlDB section
+ */
+function hidePurlDB(): void {
+  purldbSection.style.display = 'none';
+}
+
+/**
+ * Fetch and display PurlDB data (non-blocking)
+ */
+async function fetchAndDisplayPurlDBData(purl: string, parsedPurl: PackageURL): Promise<void> {
+  currentPurl = purl;
+  showPurlDBLoading();
+
+  try {
+    // Fetch package data
+    const pkg = await fetchPackageByPurl(purl);
+
+    // Fetch versions in parallel
+    const versionsPromise = fetchPackageVersions(
+      parsedPurl.type,
+      parsedPurl.namespace || null,
+      parsedPurl.name
+    );
+
+    // Fetch dependencies if available
+    let dependencies: PurlDBDependency[] = [];
+    if (pkg && pkg.dependencies) {
+      dependencies = await fetchDependencies(pkg.dependencies);
+    }
+
+    // Wait for versions
+    const versions = await versionsPromise;
+    currentVersions = versions;
+
+    // Render the section
+    const html = renderPurlDBSection(pkg, versions, dependencies, purl);
+    showPurlDBContent(html);
+
+    // Add event listeners for interactive elements
+    setupPurlDBEventListeners();
+  } catch (error) {
+    console.error('PurlDB fetch error:', error);
+    showPurlDBError('Failed to load package information from PurlDB');
+  }
+}
+
+/**
+ * Setup event listeners for PurlDB interactive elements
+ */
+function setupPurlDBEventListeners(): void {
+  // Version click handler
+  purldbContent.addEventListener('click', (e: Event) => {
+    const target = e.target as HTMLElement;
+
+    // Handle version link clicks
+    const versionLink = target.closest('.version-link');
+    if (versionLink) {
+      e.preventDefault();
+      const newPurl = versionLink.getAttribute('data-purl');
+      if (newPurl && newPurl !== currentPurl) {
+        purlInput.value = newPurl;
+        handleParse();
+      }
+      return;
+    }
+
+    // Handle dependency link clicks
+    const depLink = target.closest('.dependency-link');
+    if (depLink) {
+      e.preventDefault();
+      const newPurl = depLink.getAttribute('data-purl');
+      if (newPurl) {
+        purlInput.value = newPurl;
+        handleParse();
+      }
+      return;
+    }
+
+    // Handle "Show all versions" button
+    if (target.classList.contains('version-show-all')) {
+      const versionsContent = document.getElementById('purldb-versions-content');
+      if (versionsContent) {
+        const headingHtml = '<h3 class="purldb-heading">Available Versions</h3>';
+        versionsContent.innerHTML = headingHtml + renderAllVersions(currentVersions, currentPurl);
+      }
+      return;
+    }
+
+    // Handle "Show fewer versions" button
+    if (target.classList.contains('version-show-less')) {
+      const versionsContent = document.getElementById('purldb-versions-content');
+      if (versionsContent) {
+        const headingHtml = '<h3 class="purldb-heading">Available Versions</h3>';
+        versionsContent.innerHTML = headingHtml + renderVersionList(currentVersions, currentPurl);
+      }
+      return;
+    }
+  });
+}
+
+/**
  * Process and display PURL
  */
 function processPurl(input: string): void {
   hideError();
+  hidePurlDB();
 
   const result: ParseResult = parsePurl(input);
 
@@ -232,6 +375,9 @@ function processPurl(input: string): void {
   updateShareUrl(input);
 
   resultSection.classList.add('visible');
+
+  // Fetch PurlDB data asynchronously (non-blocking)
+  fetchAndDisplayPurlDBData(input, result.purl);
 }
 
 /**
