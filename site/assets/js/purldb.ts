@@ -17,7 +17,7 @@ export const PURLDB_MAX_VERSIONS_DISPLAY = 10;
 const MAX_PAGES = 5; // Reduced to limit proxy requests
 
 // CORS proxy to bypass same-origin policy (PurlDB doesn't support CORS)
-const CORS_PROXY_URL = 'https://corsproxy.io/?';
+const CORS_PROXY_URL = 'https://api.codetabs.com/v1/proxy/?quest=';
 
 /**
  * Wrap a URL with the CORS proxy
