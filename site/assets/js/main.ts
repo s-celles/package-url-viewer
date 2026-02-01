@@ -331,7 +331,7 @@ function setupPurlDBEventListeners(): void {
       const newPurl = versionLink.getAttribute('data-purl');
       if (newPurl && newPurl !== currentPurl) {
         purlInput.value = newPurl;
-        handleParse();
+        handleParseAndLoadPurlDB();
       }
       return;
     }
@@ -343,7 +343,7 @@ function setupPurlDBEventListeners(): void {
       const newPurl = depLink.getAttribute('data-purl');
       if (newPurl) {
         purlInput.value = newPurl;
-        handleParse();
+        handleParseAndLoadPurlDB();
       }
       return;
     }
@@ -434,6 +434,23 @@ function handleParse(): void {
     const url = new URL(window.location.href);
     url.searchParams.set('purl', input);
     window.history.pushState({}, '', url.toString());
+  }
+}
+
+/**
+ * Handle parse and automatically load PurlDB data
+ * Used when switching versions or clicking dependencies
+ */
+function handleParseAndLoadPurlDB(): void {
+  const input = purlInput.value.trim();
+  if (input) {
+    processPurl(input);
+    // Update URL without reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('purl', input);
+    window.history.pushState({}, '', url.toString());
+    // Auto-load PurlDB data
+    fetchAndDisplayPurlDBData();
   }
 }
 
