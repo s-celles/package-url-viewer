@@ -21,13 +21,16 @@ const errorResult = document.getElementById('error-result') as HTMLElement;
 const vulnerablecodeResult = document.getElementById('vulnerablecode-result') as HTMLElement;
 const badgeContainer = document.getElementById('badge-container') as HTMLElement;
 const purldbSection = document.getElementById('purldb-section') as HTMLElement;
+const purldbPrompt = document.getElementById('purldb-prompt') as HTMLElement;
+const purldbLoadButton = document.getElementById('purldb-load-button') as HTMLButtonElement;
 const purldbLoading = document.getElementById('purldb-loading') as HTMLElement;
 const purldbContent = document.getElementById('purldb-content') as HTMLElement;
 const purldbError = document.getElementById('purldb-error') as HTMLElement;
 
-// State for version expansion
+// State for version expansion and parsed PURL
 let currentVersions: PurlDBPackage[] = [];
 let currentPurl: string = '';
+let currentParsedPurl: PackageURL | null = null;
 
 /**
  * Display error message
@@ -220,10 +223,22 @@ function showBadges(badges: BadgeResult[]): void {
 }
 
 /**
+ * Show PurlDB prompt (load button)
+ */
+function showPurlDBPrompt(): void {
+  purldbSection.style.display = 'block';
+  purldbPrompt.style.display = 'flex';
+  purldbLoading.style.display = 'none';
+  purldbContent.style.display = 'none';
+  purldbError.style.display = 'none';
+}
+
+/**
  * Show PurlDB loading state
  */
 function showPurlDBLoading(): void {
   purldbSection.style.display = 'block';
+  purldbPrompt.style.display = 'none';
   purldbLoading.style.display = 'flex';
   purldbContent.style.display = 'none';
   purldbError.style.display = 'none';
@@ -233,6 +248,7 @@ function showPurlDBLoading(): void {
  * Show PurlDB content
  */
 function showPurlDBContent(html: string): void {
+  purldbPrompt.style.display = 'none';
   purldbLoading.style.display = 'none';
   purldbContent.innerHTML = html;
   purldbContent.style.display = 'block';
@@ -243,6 +259,7 @@ function showPurlDBContent(html: string): void {
  * Show PurlDB error
  */
 function showPurlDBError(message: string): void {
+  purldbPrompt.style.display = 'none';
   purldbLoading.style.display = 'none';
   purldbContent.style.display = 'none';
   purldbError.textContent = message;
@@ -259,19 +276,22 @@ function hidePurlDB(): void {
 /**
  * Fetch and display PurlDB data (non-blocking)
  */
-async function fetchAndDisplayPurlDBData(purl: string, parsedPurl: PackageURL): Promise<void> {
-  currentPurl = purl;
+async function fetchAndDisplayPurlDBData(): Promise<void> {
+  if (!currentPurl || !currentParsedPurl) {
+    return;
+  }
+
   showPurlDBLoading();
 
   try {
     // Fetch package data
-    const pkg = await fetchPackageByPurl(purl);
+    const pkg = await fetchPackageByPurl(currentPurl);
 
     // Fetch versions in parallel
     const versionsPromise = fetchPackageVersions(
-      parsedPurl.type,
-      parsedPurl.namespace || null,
-      parsedPurl.name
+      currentParsedPurl.type,
+      currentParsedPurl.namespace || null,
+      currentParsedPurl.name
     );
 
     // Fetch dependencies if available
@@ -285,7 +305,7 @@ async function fetchAndDisplayPurlDBData(purl: string, parsedPurl: PackageURL): 
     currentVersions = versions;
 
     // Render the section
-    const html = renderPurlDBSection(pkg, versions, dependencies, purl);
+    const html = renderPurlDBSection(pkg, versions, dependencies, currentPurl);
     showPurlDBContent(html);
 
     // Add event listeners for interactive elements
@@ -364,6 +384,10 @@ function processPurl(input: string): void {
     return;
   }
 
+  // Store current PURL and parsed result for PurlDB loading
+  currentPurl = input;
+  currentParsedPurl = result.purl;
+
   const registry: RegistryResult = getRegistryUrl(result.purl);
   const vulnerablecode: VulnerableCodeResult = getVulnerableCodeUrl(input);
   const badges: BadgeResult[] = getBadges(input);
@@ -376,8 +400,8 @@ function processPurl(input: string): void {
 
   resultSection.classList.add('visible');
 
-  // Fetch PurlDB data asynchronously (non-blocking)
-  fetchAndDisplayPurlDBData(input, result.purl);
+  // Show PurlDB load button (user can click to fetch data)
+  showPurlDBPrompt();
 }
 
 /**
@@ -435,6 +459,9 @@ purlInput.addEventListener('keydown', (e: KeyboardEvent) => {
 });
 
 copyButton.addEventListener('click', copyShareUrl);
+
+// PurlDB load button
+purldbLoadButton.addEventListener('click', fetchAndDisplayPurlDBData);
 
 // Handle browser back/forward
 window.addEventListener('popstate', initFromUrl);
