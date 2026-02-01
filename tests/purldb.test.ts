@@ -179,8 +179,9 @@ describe('PurlDB API Service', () => {
 
       await fetchPackageVersions('npm', '@scope', 'pkg');
 
+      // URL is wrapped with CORS proxy, so namespace is double-encoded
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('namespace=%40scope'),
+        expect.stringContaining('namespace%3D%2540scope'),
         expect.anything()
       );
     });

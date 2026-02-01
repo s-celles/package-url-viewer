@@ -12,9 +12,19 @@ import type {
 // API Constants
 export const PURLDB_BASE_URL = 'https://public.purldb.io';
 export const PURLDB_API_URL = `${PURLDB_BASE_URL}/api/packages/`;
-export const PURLDB_TIMEOUT_MS = 5000;
+export const PURLDB_TIMEOUT_MS = 10000; // Increased for proxy latency
 export const PURLDB_MAX_VERSIONS_DISPLAY = 10;
-const MAX_PAGES = 10;
+const MAX_PAGES = 5; // Reduced to limit proxy requests
+
+// CORS proxy to bypass same-origin policy (PurlDB doesn't support CORS)
+const CORS_PROXY_URL = 'https://corsproxy.io/?';
+
+/**
+ * Wrap a URL with the CORS proxy
+ */
+function withCorsProxy(url: string): string {
+  return `${CORS_PROXY_URL}${encodeURIComponent(url)}`;
+}
 
 // In-memory cache for session duration
 const packageCache = new Map<string, PurlDBCacheEntry>();
@@ -87,7 +97,7 @@ export async function fetchPackageByPurl(
 
   try {
     const url = `${PURLDB_API_URL}?purl=${encodeURIComponent(purl)}`;
-    const response = await fetchWithTimeout(url);
+    const response = await fetchWithTimeout(withCorsProxy(url));
 
     if (!response.ok) {
       console.error(`PurlDB API error: ${response.status} ${response.statusText}`);
@@ -145,7 +155,7 @@ export async function fetchPackageVersions(
 
     // Handle pagination
     while (nextUrl && pageCount < MAX_PAGES) {
-      const response = await fetchWithTimeout(nextUrl);
+      const response = await fetchWithTimeout(withCorsProxy(nextUrl));
 
       if (!response.ok) {
         console.error(`PurlDB versions API error: ${response.status}`);
